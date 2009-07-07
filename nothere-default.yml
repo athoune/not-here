@@ -1,0 +1,11 @@
+server:
+  port: 5007
+sources:
+  'test.ics'
+calendars:
+  - name: holidays
+    title: "Worker's holidays"
+    color: '#0252D4'
+    pattern:
+    - "not here"
+    - "holiday"
