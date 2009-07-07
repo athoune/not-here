@@ -6,7 +6,8 @@ import datetime
 import socket
 import glob
 
-from icalendar import Calendar, Event, vDatetime, vDate
+#http://codespeak.net/icalendar/
+from icalendar import Calendar, Event, vDatetime, vDate, vText
 import yaml
 
 class Server(object):
@@ -37,7 +38,7 @@ Connection: close
 
 '''
 			else:
-				calendar = self.calendar[what]
+				calendar = self.calendar[what].cal.as_string()
 				data ='''HTTP/1.0 200 OK
 Connection: close
 Content-Length: %i
@@ -59,9 +60,11 @@ class MetaCalendar(object):
 		self.cal['version'] = '2.0'
 		self.cal['method'] = 'PUBLISH'
 		self.cal['prodid'] = '-//Garambrogne Inc.//Not here 1.0//FR'
+		self.size = 0
 	def append(self, event):
 		#pass
 		self.cal.add_component(event)
+		self.size +=1
 	def __str__(self):
 		return self.cal.as_string()
 	def store(self):
@@ -69,7 +72,7 @@ class MetaCalendar(object):
 		f.write(self.cal.as_string())
 		f.close()
 	def __repr__(self):
-		return '<Calendar %s>' % self.name
+		return '<Calendar %s #%i>' % (self.name, self.size)
 
 class Conf(object):
 	def __init__(self, conf = 'nothere.yml'):
@@ -94,19 +97,27 @@ class Conf(object):
 			for calendar in self.conf['calendars']:
 				meta = MetaCalendar(calendar['name'], calendar['title'], calendar.get('summary', ''), calendar.get('color', '#0252D4'))
 				for user, source in self.calsources.iteritems():
+					acronyme = user.split('.')[0]
 					for component in source.walk():
 						if component.name == 'VEVENT':
 							for pattern in calendar['pattern']:
 								if component['summary'].lower().find(pattern):
+									component['summary'] = vText("[%s] %s" % (acronyme, component['summary']))
 									meta.append(component)
 									continue
 				self._calendars[meta.name] = meta
 		return self._calendars
+	def server(self):
+		server = Server()
+		for name, calendar in self.calendars().iteritems():
+			server[name] = calendar
+		server.forever()
 if __name__ == '__main__':
 	conf = Conf('nothere.yml')
 	print conf.port
 	print conf.sources
 	print conf.calendars()
+	conf.server()
 	if len(sys.argv) == 1:
 		calendars = ['test.ics']
 	else:
@@ -122,7 +133,3 @@ if __name__ == '__main__':
 				vacance.append(component)
 	vacance.store()
 	"""
-	#server = Server()
-	#server['vacances'] = str(vacance)
-	#server.forever()
-
