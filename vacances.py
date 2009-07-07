@@ -17,7 +17,9 @@ class Server:
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.s.bind((self.HOST, self.PORT))
 		#format of response message(DO NOT ALTER IF YOU DONT KNOW WHAT U R DOING)
-		self.calendar = None
+		self.calendar = {}
+	def __setitem__(self, key, value):
+		self.calendar[key] = value
 	def forever(self):
 		self.s.listen(1)
 		while 1:
@@ -25,13 +27,21 @@ class Server:
 			print 'Connected by', addr
 			data = conn.recv(1024)
 			if not data: break
-			print data
-			data ='''HTTP/1.0 200 OK
-			Connection: close
-			Content-Length: %i
-			Content-Type: text/calendar
+			what = data.split(' ')[1][1:-4]
+			print "url:", what
+			if what not in self.calendar:
+				data ='''HTTP/1.0 404 NOT FOUND
+Connection: close
 
-			%s''' % (len(self.calendar), self.calendar)
+'''
+			else:
+				calendar = self.calendar[what]
+				data ='''HTTP/1.0 200 OK
+Connection: close
+Content-Length: %i
+Content-Type: text/plain
+
+%s''' % (len(calendar), calendar)
 			conn.send(data)
 			conn.close()	
 
@@ -66,7 +76,7 @@ if __name__ == '__main__':
 			print component['summary'], component['dtstart'].dt, component['dtend'].dt
 			vacance.append(component)
 	vacance.store()
-	#server = Server()
-	#server.calendar = str(vacance)
-	#server.forever()
+	server = Server()
+	server['vacances'] = str(vacance)
+	server.forever()
 
