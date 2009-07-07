@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = "Mathieu Lecarme <mathieu@garambrogne.net>"
+
 import sys
 import datetime
 import socket
@@ -12,6 +14,7 @@ import yaml
 
 class Server(object):
 	"""
+	A crude http server to test import from iCal
 	http://code.activestate.com/recipes/576541/
 	"""
 	def __init__(self, port= 50007):
@@ -49,6 +52,8 @@ Content-Type: text/plain
 			conn.close()	
 
 class MetaCalendar(object):
+	"""The calendar object
+	"""
 	def __init__(self, name, title, summary="", color = '#0252D4', tz = 'Europe/Paris'):
 		self.name = name
 		self.cal = Calendar()
@@ -74,7 +79,9 @@ class MetaCalendar(object):
 	def __repr__(self):
 		return '<Calendar %s #%i>' % (self.name, self.size)
 
-class Conf(object):
+class Config(object):
+	"""The config object wich read the yaml configurations file
+	"""
 	def __init__(self, conf = 'nothere.yml'):
 		self.conf = yaml.load(open(conf, 'rb').read())
 		self.port = self.conf['server']['port']
@@ -92,6 +99,7 @@ class Conf(object):
 			self.calsources[source.split('/')[-1]] = Calendar.from_string(open(source,'rb').read())
 		self._calendars = None
 	def calendars(self):
+		"Ready to eat calendars data"
 		if self._calendars == None:
 			self._calendars = {}
 			for calendar in self.conf['calendars']:
@@ -108,28 +116,14 @@ class Conf(object):
 				self._calendars[meta.name] = meta
 		return self._calendars
 	def server(self):
+		"Serve calendar with http"
 		server = Server()
 		for name, calendar in self.calendars().iteritems():
 			server[name] = calendar
 		server.forever()
 if __name__ == '__main__':
-	conf = Conf('nothere.yml')
+	conf = Config('nothere.yml')
 	print conf.port
 	print conf.sources
 	print conf.calendars()
 	conf.server()
-	if len(sys.argv) == 1:
-		calendars = ['test.ics']
-	else:
-		calendars = sys.argv[1:]
-	"""
-	vacance = MetaCalendar('vacances')
-	for calendar in calendars:
-		cal = Calendar.from_string(open(calendar,'rb').read())
-		for component in cal.walk():
-			#print component.name, component.keys()
-			if component.name == 'VEVENT':
-				print component['summary'], component['dtstart'].dt, component['dtend'].dt
-				vacance.append(component)
-	vacance.store()
-	"""
