@@ -7,6 +7,7 @@ import sys
 import datetime
 import socket
 import glob
+import os.path
 
 #http://codespeak.net/icalendar/
 from icalendar import Calendar, Event, vDatetime, vDate, vText
@@ -130,8 +131,11 @@ class Config(object):
 			server[name] = calendar
 		server.forever()
 if __name__ == '__main__':
-	conf = Config('nothere.yml')
-	print conf.port
-	print conf.sources
-	print conf.calendars()
-	conf.server()
+	if os.path.exists('nothere.yml'):
+		conf = Config('nothere.yml')
+		print conf.port
+		print conf.sources
+		print conf.calendars()
+		conf.server()
+	else:
+		print "I need a conf file named 'nothere.yml"
