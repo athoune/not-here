@@ -8,6 +8,7 @@ import datetime
 import socket
 import glob
 import os.path
+from optparse import OptionParser
 
 #http://codespeak.net/icalendar/
 from icalendar import Calendar, Event, vDatetime, vDate, vText
@@ -131,11 +132,14 @@ class Config(object):
 			server[name] = calendar
 		server.forever()
 if __name__ == '__main__':
-	if os.path.exists('nothere.yml'):
-		conf = Config('nothere.yml')
-		print conf.port
-		print conf.sources
-		print conf.calendars()
+	parser = OptionParser()
+	parser.add_option("-c", "--config", dest="config", default="nothere.yml")
+	parser.add_option("-s", "--server", dest="server", action="store_true", default=False, help="activate testing server")
+
+	(options, args) = parser.parse_args()	
+	conf = Config(options.config)
+	print conf.sources
+	print conf.calendars()
+	if options.server:
+		print "http test server listening on %i" % conf.port
 		conf.server()
-	else:
-		print "I need a conf file named 'nothere.yml"
