@@ -80,6 +80,14 @@ class MetaCalendar(object):
 	def __repr__(self):
 		return '<Calendar %s #%i>' % (self.name, self.size)
 
+def getSources(path):
+	if path.startswith('http://'):
+		return
+	if path.startswith('https://'):
+		return
+	for source in glob.glob(path):
+		yield open(source, 'rb').read()
+
 class Config(object):
 	"""The config object wich read the yaml configurations file
 	"""
@@ -88,12 +96,10 @@ class Config(object):
 		self.port = self.conf['server']['port']
 		self.sources = []
 		sources = self.conf['sources']
-		if hasattr('__iter__', sources):
-			for source in sources:
-				for s in glob.glob(source):
-					self.sources.append(s)
-		else:
-			for s in glob.glob(sources):
+		if not hasattr('__iter__', sources):
+			sources = [sources]
+		for source in sources:
+			for s in glob.glob(source):
 				self.sources.append(s)
 		self.calsources = {}
 		for source in self.sources:
@@ -110,10 +116,11 @@ class Config(object):
 					for component in source.walk():
 						if component.name == 'VEVENT':
 							for pattern in calendar['pattern']:
-								if component['summary'].lower().find(pattern):
-									component['summary'] = vText("[%s] %s" % (acronyme, component['summary']))
+								if component['summary'].lower().find(pattern) == 0:
+									print acronyme, component['dtstart'].dt, component['dtend'].dt, component['summary']
+									component['summary'] = vText(u"%s ☞ %s" % (acronyme, component['summary']))
 									meta.append(component)
-									continue
+									break
 				self._calendars[meta.name] = meta
 		return self._calendars
 	def server(self):
