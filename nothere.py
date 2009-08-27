@@ -16,6 +16,7 @@ class Server(object):
 	"""
 	A crude http server to test import from iCal
 	http://code.activestate.com/recipes/576541/
+	[TODO] utiliser le serveur compatible wsgi proposé par Python
 	"""
 	def __init__(self, port= 50007):
 		self.HOST = ''                 # Symbolic name meaning the local host
