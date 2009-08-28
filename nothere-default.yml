@@ -1,7 +1,7 @@
 server:
   port: 5007
 sources:
-  'test.ics'
+  - 'test.ics'
 calendars:
   - name: holidays
     title: "Worker's holidays"

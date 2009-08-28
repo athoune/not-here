@@ -70,12 +70,13 @@ class MetaCalendar(object):
 		self.cal['prodid'] = '-//Garambrogne Inc.//Not here 1.0//FR'
 		self.size = 0
 	def append(self, event):
-		#pass
+		"""Append an ical event"""
 		self.cal.add_component(event)
 		self.size +=1
 	def __str__(self):
 		return self.cal.as_string()
 	def store(self):
+		"save to disk"
 		f = open('%s.ics' % self.name, 'w')
 		f.write(self.cal.as_string())
 		f.close()
@@ -97,10 +98,7 @@ class Config(object):
 		self.conf = yaml.load(open(conf, 'rb').read())
 		self.port = self.conf['server']['port']
 		self.sources = []
-		sources = self.conf['sources']
-		if not hasattr('__iter__', sources):
-			sources = [sources]
-		for source in sources:
+		for source in self.conf['sources']:
 			for s in glob.glob(source):
 				self.sources.append(s)
 		self.calsources = {}
@@ -136,7 +134,7 @@ if __name__ == '__main__':
 	parser.add_option("-c", "--config", dest="config", default="nothere.yml")
 	parser.add_option("-s", "--server", dest="server", action="store_true", default=False, help="activate testing server")
 
-	(options, args) = parser.parse_args()	
+	(options, args) = parser.parse_args()
 	conf = Config(options.config)
 	print conf.sources
 	print conf.calendars()
