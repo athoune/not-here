@@ -28,7 +28,7 @@ Modify the conf file as you wich, multiple calendars are handled
 
 Launch it::
 
-  python nothere.py
+  ./nothere --server
   open webcal://localhost:50007/holidays.ics
   
 .. _Sunbird: http://www.mozilla.org/projects/calendar/
