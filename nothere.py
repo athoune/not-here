@@ -97,10 +97,14 @@ class Config(object):
 	def __init__(self, conf = 'nothere.yml'):
 		self.conf = yaml.load(open(conf, 'rb').read())
 		self.port = self.conf['server']['port']
+		self.calendarNames = []
+		for calendar in self.conf['calendars']:
+			self.calendarNames.append(calendar['name'])
 		self.sources = []
 		for source in self.conf['sources']:
 			for s in glob.glob(source):
-				self.sources.append(s)
+				if s.split('/')[-1][:-4] not in self.calendarNames:
+					self.sources.append(s)
 		self.calsources = {}
 		for source in self.sources:
 			self.calsources[source.split('/')[-1]] = Calendar.from_string(open(source,'rb').read())
@@ -117,12 +121,15 @@ class Config(object):
 						if component.name == 'VEVENT':
 							for pattern in calendar['pattern']:
 								if component['summary'].lower().find(pattern) == 0:
-									print acronyme, component['dtstart'].dt, component['dtend'].dt, component['summary']
+									#print acronyme, component['dtstart'].dt, component['dtend'].dt, component['summary']
 									component['summary'] = vText(u"%s ☞ %s" % (acronyme, component['summary']))
 									meta.append(component)
 									break
 				self._calendars[meta.name] = meta
 		return self._calendars
+	def store(self):
+		for name, metacalendar in self.calendars().iteritems():
+			metacalendar.store()
 	def server(self):
 		"Serve calendar with http"
 		server = Server()
@@ -137,7 +144,7 @@ if __name__ == '__main__':
 	(options, args) = parser.parse_args()
 	conf = Config(options.config)
 	print conf.sources
-	print conf.calendars()
+	conf.store()
 	if options.server:
 		print "http test server listening on %i" % conf.port
 		conf.server()
