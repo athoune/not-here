@@ -57,8 +57,11 @@ Content-Type: text/plain
 class MetaCalendar(object):
 	"""The calendar object
 	"""
-	def __init__(self, name, title, summary="", color = '#0252D4', tz = 'Europe/Paris'):
+	def __init__(self, name, title, destination = './', summary="", color = '#0252D4', tz = 'Europe/Paris'):
 		self.name = name
+		self.destination = destination
+		if self.destination[-1] != '/':
+			self.destination += '/'
 		self.cal = Calendar()
 		self.cal['summary'] = summary
 		self.cal['X-APPLE-CALENDAR-COLOR'] = color
@@ -77,7 +80,7 @@ class MetaCalendar(object):
 		return self.cal.as_string()
 	def store(self):
 		"save to disk"
-		f = open('%s.ics' % self.name, 'w')
+		f = open('%s%s.ics' % (self.destination, self.name), 'w')
 		f.write(self.cal.as_string())
 		f.close()
 	def __repr__(self):
@@ -109,12 +112,13 @@ class Config(object):
 		for source in self.sources:
 			self.calsources[source.split('/')[-1]] = Calendar.from_string(open(source,'rb').read())
 		self._calendars = None
+		self.destination = self.conf['destination']
 	def calendars(self):
 		"Ready to eat calendars data"
 		if self._calendars == None:
 			self._calendars = {}
 			for calendar in self.conf['calendars']:
-				meta = MetaCalendar(calendar['name'], calendar['title'], calendar.get('summary', ''), calendar.get('color', '#0252D4'))
+				meta = MetaCalendar(calendar['name'], calendar['title'], self.destination, calendar.get('summary', ''), calendar.get('color', '#0252D4'))
 				for user, source in self.calsources.iteritems():
 					acronyme = user.split('.')[0]
 					for component in source.walk():
